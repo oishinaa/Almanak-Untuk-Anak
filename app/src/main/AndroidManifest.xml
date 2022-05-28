@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ec.almanakuntukanak">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/logo_bg"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/logo_bg"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AlmanakUntukAnak">
+
+        <activity
+            android:name=".controller.pemeriksaan.PemeriksaanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.panduan.PdfActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.imunisasi.ImunisasiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.peserta.PesertaFormActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.peserta.PesertaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.panduan.PanduanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".controller.splash.GreetingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".controller.splash.SplashScreenActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

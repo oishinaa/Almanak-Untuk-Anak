@@ -23,14 +23,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Hep-B 0"
-            android:id="@+id/txtNama"/>
+            android:id="@+id/txtNama" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAlignment="textEnd"
             android:text="Kamis, 27 Mei 2022 Jam 07:00"
-            android:id="@+id/txtDate"/>
+            android:id="@+id/txtDate" />
 
         <ImageView
             android:layout_width="20dp"
@@ -40,7 +40,7 @@
             android:background="?android:selectableItemBackgroundBorderless"
             app:tint="@color/blue"
             android:src="@drawable/ic_delete"
-            android:id="@+id/imgDelete"/>
+            android:id="@+id/imgDelete" />
 
     </LinearLayout>
 

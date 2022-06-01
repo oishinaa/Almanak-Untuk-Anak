@@ -101,7 +101,7 @@
             android:layout_height="20dp"
             app:tint="@color/blue"
             android:src="@drawable/ic_arrow_down"
-            android:id="@+id/imgToggleDetail"/>
+            android:id="@+id/imgToggleDetail" />
 
     </LinearLayout>
 
@@ -180,7 +180,7 @@
         android:layout_marginHorizontal="10dp"
         android:background="@drawable/bg_corner_b_white"
         android:elevation="2.5dp"
-        android:id="@+id/rcvImunisasi"/>
+        android:id="@+id/rcvImunisasi" />
 
     <Button
         android:layout_width="match_parent"

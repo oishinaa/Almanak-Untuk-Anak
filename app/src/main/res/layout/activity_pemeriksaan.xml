@@ -103,7 +103,7 @@
             android:layout_height="20dp"
             app:tint="@color/blue"
             android:src="@drawable/ic_arrow_down"
-            android:id="@+id/imgToggleDetail"/>
+            android:id="@+id/imgToggleDetail" />
 
     </LinearLayout>
 
@@ -118,7 +118,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:id="@+id/rcvPemeriksaan"/>
+        android:id="@+id/rcvPemeriksaan" />
 
     <Button
         android:layout_width="match_parent"

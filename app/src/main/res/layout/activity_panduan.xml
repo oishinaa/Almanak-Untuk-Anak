@@ -46,7 +46,7 @@
         android:layout_marginHorizontal="20dp"
         android:layout_marginVertical="5dp"
         android:text="11-12 Bulan"
-        android:id="@+id/btnSebelasBulan"/>
+        android:id="@+id/btnSebelasBulan" />
 
     <Button
         android:layout_width="match_parent"
@@ -55,7 +55,7 @@
         android:layout_marginHorizontal="20dp"
         android:layout_marginVertical="5dp"
         android:text="&gt;1 Tahun"
-        android:id="@+id/btnSatuTahun"/>
+        android:id="@+id/btnSatuTahun" />
 
     <View
         android:layout_width="match_parent"

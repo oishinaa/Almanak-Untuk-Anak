@@ -29,12 +29,12 @@
         android:layout_weight="1"
         android:layout_marginHorizontal="20dp"
         android:layout_marginVertical="5dp"
-        app:icon="@drawable/ic_baby_bed"
+        app:icon="@drawable/ic_baby_bottle"
         app:iconPadding="20dp"
         app:iconGravity="textTop"
         app:iconSize="30dp"
-        android:text="Pemeriksaan Stimulasi Dini &amp; Intervensi Deteksi Tumbuh Kembang"
-        android:id="@+id/btnPemeriksaan" />
+        android:text="Panduan Makan Anak"
+        android:id="@+id/btnPanduan" />
 
     <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"
@@ -42,12 +42,12 @@
         android:layout_weight="1"
         android:layout_marginHorizontal="20dp"
         android:layout_marginVertical="5dp"
-        app:icon="@drawable/ic_baby_bottle"
+        app:icon="@drawable/ic_baby_bed"
         app:iconPadding="20dp"
         app:iconGravity="textTop"
         app:iconSize="30dp"
-        android:text="Panduan Makan Anak"
-        android:id="@+id/btnPanduan" />
+        android:text="Pemeriksaan Stimulasi Dini &amp; Intervensi Deteksi Tumbuh Kembang"
+        android:id="@+id/btnPemeriksaan" />
 
     <View
         android:layout_width="match_parent"

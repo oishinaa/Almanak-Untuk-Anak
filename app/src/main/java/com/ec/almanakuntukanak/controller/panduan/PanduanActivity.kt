@@ -28,7 +28,19 @@ class PanduanActivity : BaseActivity() {
         btnSatuTahun = findViewById(R.id.btnSatuTahun)
 
         btnNolBulan.setOnClickListener {
-            startActivity(Intent(this, PdfActivity::class.java))
+            startActivity(Intent(this, PdfActivity::class.java).putExtra("fileName", "panduan1"))
+        }
+        btnTujuhBulan.setOnClickListener {
+            startActivity(Intent(this, PdfActivity::class.java).putExtra("fileName", "panduan2"))
+        }
+        btnSembilanBulan.setOnClickListener {
+            startActivity(Intent(this, PdfActivity::class.java).putExtra("fileName", "panduan3"))
+        }
+        btnSebelasBulan.setOnClickListener {
+            startActivity(Intent(this, PdfActivity::class.java).putExtra("fileName", "panduan4"))
+        }
+        btnSatuTahun.setOnClickListener {
+            startActivity(Intent(this, PdfActivity::class.java).putExtra("fileName", "panduan5"))
         }
     }
 }

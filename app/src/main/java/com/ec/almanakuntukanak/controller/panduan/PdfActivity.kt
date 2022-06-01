@@ -3,11 +3,14 @@ package com.ec.almanakuntukanak.controller.panduan
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.R
 import com.github.chrisbanes.photoview.PhotoView
+import java.io.File
 
 @Suppress("DEPRECATION")
 class PdfActivity : BaseActivity() {
@@ -28,7 +31,12 @@ class PdfActivity : BaseActivity() {
         img = findViewById(R.id.img)
         btnPrev = findViewById(R.id.btnPrev)
         btnNext = findViewById(R.id.btnNext)
-        renderer = PdfRenderer(assets.openFd("sample2.pdf").parcelFileDescriptor)
+
+        val fileName = intent.getStringExtra("fileName")
+        val file = File(cacheDir, "tempFile")
+        file.outputStream().use { fileOut -> assets.open("$fileName.pdf").copyTo(fileOut) }
+        val fileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        renderer = PdfRenderer(fileDescriptor)
 
         btnPrev.setOnClickListener {
             if (curPage == 0) return@setOnClickListener

@@ -21,7 +21,8 @@
             app:tint="@color/ic_white"
             android:background="@color/blue"
             app:shapeAppearanceOverlay="@style/circleImageView"
-            android:src="@drawable/ic_gender_female" />
+            android:src="@drawable/ic_gender_female"
+            android:id="@+id/imgJk" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -33,12 +34,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
-                android:text="Sari" />
+                android:id="@+id/txtNama" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="3 Bulan" />
+                android:id="@+id/txtUmur" />
 
         </LinearLayout>
 
@@ -49,36 +50,56 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:visibility="gone"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:id="@+id/lnlDetail">
 
-        <TextView
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="10sp"
-            android:text="TTL: Malang, 25 Jan 2022" />
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="10sp"
-            android:text="NIK:" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textSize="11sp"
+                android:text="TTL:"
+                android:id="@+id/txtTtl" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="10sp"
-            android:text="KK:" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textSize="11sp"
+                android:text="JKN:"
+                android:id="@+id/txtJkn"/>
 
-        <TextView
-            android:layout_width="match_parent"
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:textSize="10sp"
-            android:text="JKN: 80800990966565" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textSize="11sp"
+                android:text="NIK:"
+                android:id="@+id/txtNik" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:textSize="11sp"
+                android:text="KK:"
+                android:id="@+id/txtKk"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 

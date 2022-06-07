@@ -36,7 +36,7 @@ class PesertaAdapter(context: PesertaActivity, private var items: ArrayList<Pese
         val item: PesertaModel = items[position]
         holder.lnlBlankSta.visibility = if (position == 0) View.VISIBLE else View.GONE
         holder.lnlDetail.setOnClickListener {
-            context.startActivity(Intent(context, if (from == "imunisasi") ImunisasiActivity::class.java else PemeriksaanActivity::class.java))
+            context.startActivity(Intent(context, if (from == "imunisasi") ImunisasiActivity::class.java else PemeriksaanActivity::class.java).putExtra("id", item.id))
         }
         holder.txtNama.text = item.nama
         holder.txtJk.text = item.jk

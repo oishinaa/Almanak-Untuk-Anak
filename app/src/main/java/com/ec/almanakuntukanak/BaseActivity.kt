@@ -6,8 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
 open class BaseActivity : AppCompatActivity() {
-    fun showDatePickerDialog(onDateSetListener: DatePickerDialog.OnDateSetListener) {
-        val c = Calendar.getInstance()
+    fun showDatePickerDialog(onDateSetListener: DatePickerDialog.OnDateSetListener, date: Calendar?) {
+        val c = date ?: Calendar.getInstance()
         val datePickerDialog = DatePickerDialog(this, onDateSetListener, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH))
         datePickerDialog.show()
     }

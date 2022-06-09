@@ -58,7 +58,7 @@ class PesertaFormActivity : BaseActivity() {
         txtTgl.text = DateUtils().dpFormatter(tgl.time)
 
         if (id != 0) load()
-        lnlTgl.setOnClickListener { showDatePickerDialog(onDateSetListener) }
+        lnlTgl.setOnClickListener { showDatePickerDialog(onDateSetListener, tgl) }
         btn.setOnClickListener { if (id == 0) add() else edit() }
     }
 

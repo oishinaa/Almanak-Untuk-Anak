@@ -102,10 +102,14 @@ class ImunisasiActivity : BaseActivity() {
             if (result.moveToFirst()) {
                 imgJk.setImageResource(if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) R.drawable.ic_gender_male else R.drawable.ic_gender_female)
                 txtNama.text = result.getString(result.getColumnIndex(DBHelper.entry_name))
-                val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(
-                    DBHelper.entry_tgl)).toString())
+                val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.entry_tgl)).toString())
+                val year = DateUtils().getDatePart("yyyy", Date()) - DateUtils().getDatePart("yyyy", date!!)
+                val day = DateUtils().getDatePart("dd", Date()) - DateUtils().getDatePart("dd", date)
+                val month = if (year < 0) 0 else 12 * year + (DateUtils().getDatePart("MM", Date()) - DateUtils().getDatePart("MM", date)) + if (day < 0) -1 else 0
+                val umur = "" + (if (month < 0) 0 else month/12) + " Tahun " + (if (month < 0) 0 else month%12) + " Bulan"
+                txtUmur.text = umur
                 val tgl = Calendar.getInstance()
-                tgl.set(DateUtils().getDatePart("yyyy", date!!), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
+                tgl.set(DateUtils().getDatePart("yyyy", date), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
                 val ttl = "TTL: ${result.getString(result.getColumnIndex(DBHelper.entry_tpl))}, ${DateUtils().dpFormatter(tgl.time)}"
                 txtTtl.text = ttl
                 val nik = "NIK: " + result.getString(result.getColumnIndex(DBHelper.entry_nik))

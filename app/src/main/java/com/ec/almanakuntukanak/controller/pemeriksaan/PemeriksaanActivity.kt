@@ -1,7 +1,12 @@
 package com.ec.almanakuntukanak.controller.pemeriksaan
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -57,6 +62,16 @@ class PemeriksaanActivity : BaseActivity() {
         imgToggleDetail = findViewById(R.id.imgToggleDetail)
         rcvPemeriksaan = findViewById(R.id.rcvPemeriksaan)
 
+        val broadcastReceiver = object: BroadcastReceiver() {
+            override fun onReceive(arg0: Context, intent: Intent) {
+                val action = intent.action
+                if (action == "finish p") {
+                    finish()
+                }
+            }
+        }
+        registerReceiver(broadcastReceiver, IntentFilter("finish p"))
+
         id = intent.getIntExtra("id", 0)
 
         lnlToggleDetail.setOnClickListener{
@@ -72,7 +87,7 @@ class PemeriksaanActivity : BaseActivity() {
         val result = db.getEntry(id)
         if (result != null) {
             if (result.moveToFirst()) {
-                imgJk.setImageResource(if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) R.drawable.ic_gender_male else R.drawable.ic_gender_female)
+                imgJk.setImageResource(if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) R.drawable.ic_gender_female else R.drawable.ic_gender_male)
                 txtNama.text = result.getString(result.getColumnIndex(DBHelper.entry_name))
                 val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.entry_tgl)).toString())
                 val year = DateUtils().getDatePart("yyyy", Date()) - DateUtils().getDatePart("yyyy", date!!)
@@ -94,15 +109,35 @@ class PemeriksaanActivity : BaseActivity() {
         }
     }
 
+    @SuppressLint("Range")
     private fun loadPemeriksaan() {
         rcvPemeriksaan.layoutManager = LinearLayoutManager(this)
+        var i = 0
+        var isSet = false
         val listPemeriksaan = ArrayList<PemeriksaanModel>()
-        for (i in 1 until 11) {
-            val pemeriksaanModel = PemeriksaanModel()
-            pemeriksaanModel.status = if (i < 3) 1 else if (i == 3) 2 else 0
-            pemeriksaanModel.periode = "29 Hari - 3 Bulan"
-            pemeriksaanModel.alarm = "1 Feb 2023 Jam 07:00"
-            listPemeriksaan.add(pemeriksaanModel)
+        val arrPeriode = arrayOf("29 Hari", "3 Bulan", "6 Bulan", "9 Bulan", "12 Bulan", "18 Bulan", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
+        val result = db.getVisits(2, id)
+        if (result != null) {
+            if (result.moveToFirst()) {
+                do {
+                    val pemeriksaanModel = PemeriksaanModel()
+                    pemeriksaanModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
+                    pemeriksaanModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
+                    pemeriksaanModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_date))
+                    pemeriksaanModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
+                    val dt = DateUtils().dbFormatter.parse(pemeriksaanModel.date.toString())
+                    val tm = DateUtils().tmFormatter.parse(pemeriksaanModel.time)
+                    pemeriksaanModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
+                    pemeriksaanModel.periode = arrPeriode[i]
+                    pemeriksaanModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(dt!!) + " Jam " + DateUtils().tmFormatter.format(tm!!)
+                    listPemeriksaan.add(pemeriksaanModel)
+                    if (!isSet && DateUtils().dbFormatter.format(Date()).toInt() < result.getInt(result.getColumnIndex(DBHelper.visit_date)) && pemeriksaanModel.status != 1) {
+                        listPemeriksaan[if (i == 0) 0 else i-(if (listPemeriksaan[i-1].status == 1) 0 else 1)].status = 2
+                        isSet = true
+                    }
+                    i++
+                } while (result.moveToNext())
+            }
         }
         rcvPemeriksaan.adapter = PemeriksaanAdapter(this, listPemeriksaan)
     }

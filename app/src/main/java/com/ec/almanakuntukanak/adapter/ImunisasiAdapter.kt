@@ -29,8 +29,8 @@ class ImunisasiAdapter(context: ImunisasiActivity, private var items: ArrayList<
         val item: ImunisasiModel = items[position]
         holder.lnlBlankSta.visibility = if (position == 0) View.VISIBLE else View.GONE
         holder.txtNama.text = item.nama
-        holder.txtDate.text = item.date
-        holder.imgDelete.visibility = if (item.date.isNotEmpty()) View.VISIBLE else View.GONE
+        holder.txtDate.text = item.alarm
+        holder.imgDelete.visibility = if (item.alarm.isNotEmpty()) View.VISIBLE else View.GONE
         holder.imgDelete.setOnClickListener {  }
         holder.lnlBlankEnd.visibility = if (position+1 == items.size) View.VISIBLE else View.GONE
     }

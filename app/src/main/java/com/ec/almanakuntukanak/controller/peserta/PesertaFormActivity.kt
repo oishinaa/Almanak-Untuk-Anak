@@ -1,9 +1,11 @@
 package com.ec.almanakuntukanak.controller.peserta
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.DBHelper
@@ -58,7 +60,15 @@ class PesertaFormActivity : BaseActivity() {
         txtTgl.text = DateUtils().dpFormatter(tgl.time)
 
         if (id != 0) load()
-        lnlTgl.setOnClickListener { showDatePickerDialog(onDateSetListener, tgl) }
+        lnlTgl.setOnClickListener {
+            if (id == 0) showDatePickerDialog(onDateSetListener, tgl)
+            else {
+                val builder = AlertDialog.Builder(this)
+                builder.setMessage("Tidak dapat mengubah tanggal lahir.")
+                builder.setPositiveButton("Oke") { _,_ -> }
+                builder.show()
+            }
+        }
         btn.setOnClickListener { if (id == 0) add() else edit() }
     }
 
@@ -85,6 +95,7 @@ class PesertaFormActivity : BaseActivity() {
         val jk = if (rdbPerempuan.isChecked) 1 else 2
         db.addEntry(edtName.text.toString(), jk, edtTpl.text.toString(), DateUtils().dbFormatter.format(tgl.time).toInt(),
             edtNIK.text.toString(), edtKK.text.toString(), edtJKN.text.toString())
+        insertVisit()
         restartActivity()
     }
 
@@ -93,6 +104,39 @@ class PesertaFormActivity : BaseActivity() {
         db.updEntry(id, edtName.text.toString(), jk, edtTpl.text.toString(), DateUtils().dbFormatter.format(tgl.time).toInt(),
             edtNIK.text.toString(), edtKK.text.toString(), edtJKN.text.toString())
         restartActivity()
+    }
+
+    @SuppressLint("Range")
+    private fun insertVisit() {
+        if (id == 0) {
+            val result = db.getLastEntry()
+            if (result.moveToFirst()) {
+                id = result.getInt(result.getColumnIndex(DBHelper.entry_id))
+            }
+        }
+
+        if (id != 0) {
+            db.delAllVisits(2, id)
+            Log.v("id", id.toString())
+            val dateArr = arrayOf(Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(),
+                Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance())
+            for (dt in dateArr) {
+                dt.set(tgl.get(Calendar.YEAR), tgl.get(Calendar.MONTH), tgl.get(Calendar.DATE))
+            }
+            dateArr[0].add(Calendar.DATE, 29)
+            dateArr[1].add(Calendar.MONTH, 3)
+            dateArr[2].add(Calendar.MONTH, 6)
+            dateArr[3].add(Calendar.MONTH, 9)
+            dateArr[4].add(Calendar.MONTH, 12)
+            dateArr[5].add(Calendar.MONTH, 18)
+            dateArr[6].add(Calendar.YEAR, 2)
+            dateArr[7].add(Calendar.YEAR, 3)
+            dateArr[8].add(Calendar.YEAR, 4)
+            dateArr[9].add(Calendar.YEAR, 5)
+            for(dt in dateArr) {
+                db.addVisit(id, 2, DateUtils().dbFormatter.format(dt.time).toInt(), "07:00", "", 0)
+            }
+        }
     }
 
     private fun restartActivity() {

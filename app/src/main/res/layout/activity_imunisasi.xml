@@ -151,13 +151,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="2.5dp"
-            android:text="Sudah" />
+            android:text="Sudah"
+            android:id="@+id/btnSudah" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="2.5dp"
-            android:text="Tunda" />
+            android:text="Jadwal"
+            android:id="@+id/btnJadwal" />
 
     </LinearLayout>
 

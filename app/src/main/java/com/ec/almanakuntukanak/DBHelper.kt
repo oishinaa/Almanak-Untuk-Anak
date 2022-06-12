@@ -74,6 +74,11 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         return db.rawQuery("SELECT * FROM $entries WHERE $entry_id = $id", null)
     }
 
+    fun getLastEntry(): Cursor {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT MAX($entry_id) id FROM $entries", null)
+    }
+
     fun addEntry(nama: String, jk: Int, tpl: String, tgl: Int, nik: String, kk: String, jkn: String) {
         val db = this.readableDatabase
         val values = ContentValues()
@@ -108,9 +113,14 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
-    fun getVisits(type: Int): Cursor? {
+    fun getVisits(type: Int, entry: Int): Cursor? {
         val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type ORDER BY $visit_date", null)
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type and $visit_entry_id = $entry ORDER BY $visit_date", null)
+    }
+
+    fun getVisitByName(entry: Int, notes: String): Cursor? {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_notes = '$notes' and $visit_entry_id = $entry", null)
     }
 
     fun addVisit(entryId: Int, type: Int, date: Int, time: String, notes: String, status: Int) {
@@ -141,15 +151,45 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
+    fun updVisitByName(entryId: Int, date: Int, time: String, notes: String) {
+        val values = ContentValues()
+        values.put(visit_entry_id, entryId)
+        values.put(visit_date, date)
+        values.put(visit_time, time)
+        values.put(visit_status, 0)
+
+        val db = this.writableDatabase
+        db.update(visits, values, "$visit_notes = '$notes' and $visit_entry_id = $entryId", null)
+        db.close()
+    }
+
+    fun updVisitAsDone(id: Int) {
+        val values = ContentValues()
+        values.put(visit_status, 1)
+
+        val db = this.writableDatabase
+        db.update(visits, values, "$visit_id = ?", Array(1) { id.toString() })
+        db.close()
+    }
+
+    fun updVisitAsDoneByName(entryId: Int, notes: String) {
+        val values = ContentValues()
+        values.put(visit_status, 1)
+
+        val db = this.writableDatabase
+        db.update(visits, values, "$visit_notes = '$notes' and $visit_entry_id = $entryId", null)
+        db.close()
+    }
+
     fun delVisit(id: Int) {
         val db = this.writableDatabase
         db.delete(visits, "$visit_id = ?", Array(1) { id.toString() })
         db.close()
     }
 
-    fun delAllVisits(type: Int) {
+    fun delAllVisits(type: Int, entry: Int) {
         val db = this.writableDatabase
-        db.delete(visits, "$visit_type = ?", Array(1) { type.toString() })
+        db.delete(visits, "$visit_type = $type and $visit_entry_id = $entry", null)
         db.close()
     }
 }

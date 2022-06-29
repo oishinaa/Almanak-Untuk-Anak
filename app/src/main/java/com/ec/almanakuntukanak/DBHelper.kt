@@ -113,9 +113,19 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
+    fun getVisit(id: String): Cursor? {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_id = $id", null)
+    }
+
+    fun getVisits(): Cursor? {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_status < 10 ORDER BY $visit_date, $visit_time", null)
+    }
+
     fun getVisits(type: Int, entry: Int): Cursor? {
         val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type and $visit_entry_id = $entry ORDER BY $visit_date", null)
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type and $visit_entry_id = $entry ORDER BY $visit_date, $visit_time", null)
     }
 
     fun getVisitByName(entry: Int, notes: String): Cursor? {
@@ -178,6 +188,27 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
 
         val db = this.writableDatabase
         db.update(visits, values, "$visit_notes = '$notes' and $visit_entry_id = $entryId", null)
+        db.close()
+    }
+
+    fun turnOffVisit(id: Int) {
+        val db = this.writableDatabase
+        db.execSQL("update $visits set $visit_status = $visit_status + 10 where $visit_entry_id = $id")
+        db.close()
+    }
+
+    fun turnOnVisit(id: Int) {
+        val db = this.writableDatabase
+        db.execSQL("update $visits set $visit_status = $visit_status - 10 where $visit_entry_id = $id")
+        db.close()
+    }
+
+    fun snoozeVisit(id: String, date: Int) {
+        val values = ContentValues()
+        values.put(visit_date, date)
+
+        val db = this.writableDatabase
+        db.update(visits, values, "$visit_id = ?", Array(1) { id })
         db.close()
     }
 

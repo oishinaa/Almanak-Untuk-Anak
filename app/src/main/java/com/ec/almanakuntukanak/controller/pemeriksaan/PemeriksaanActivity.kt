@@ -1,16 +1,18 @@
 package com.ec.almanakuntukanak.controller.pemeriksaan
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +20,8 @@ import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.DBHelper
 import com.ec.almanakuntukanak.R
 import com.ec.almanakuntukanak.adapter.PemeriksaanAdapter
-import com.ec.almanakuntukanak.model.PemeriksaanModel
+import com.ec.almanakuntukanak.model.KunjunganModel
+import com.ec.almanakuntukanak.tracker.ServiceTracker
 import com.ec.almanakuntukanak.utils.DateUtils
 import com.google.android.material.imageview.ShapeableImageView
 import java.util.*
@@ -37,6 +40,10 @@ class PemeriksaanActivity : BaseActivity() {
     private lateinit var txtToggleDetail: TextView
     private lateinit var imgToggleDetail: ImageView
     private lateinit var rcvPemeriksaan: RecyclerView
+    private lateinit var btn: Button
+    private lateinit var edtPassword: EditText
+    private lateinit var imgShow: ImageView
+    private lateinit var imgHide: ImageView
     private var id = 0
 
     private val db = DBHelper(this, null)
@@ -61,6 +68,7 @@ class PemeriksaanActivity : BaseActivity() {
         txtToggleDetail = findViewById(R.id.txtToggleDetail)
         imgToggleDetail = findViewById(R.id.imgToggleDetail)
         rcvPemeriksaan = findViewById(R.id.rcvPemeriksaan)
+        btn = findViewById(R.id.btn)
 
         val broadcastReceiver = object: BroadcastReceiver() {
             override fun onReceive(arg0: Context, intent: Intent) {
@@ -77,9 +85,34 @@ class PemeriksaanActivity : BaseActivity() {
         lnlToggleDetail.setOnClickListener{
             toggleDetail()
         }
+        btn.setOnClickListener {
+            val dialogLayout = LayoutInflater.from(this).inflate(R.layout.dialog_isi_password, null)
+            edtPassword = dialogLayout.findViewById(R.id.edtPassword)
+            imgShow = dialogLayout.findViewById(R.id.imgShow)
+            imgHide = dialogLayout.findViewById(R.id.imgHide)
+            edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+
+            imgShow.setOnClickListener {
+                edtPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                imgHide.visibility = View.VISIBLE
+                imgShow.visibility = View.GONE
+            }
+            imgHide.setOnClickListener {
+                edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                imgShow.visibility = View.VISIBLE
+                imgHide.visibility = View.GONE
+            }
+
+            val builder = AlertDialog.Builder(this)
+            builder.setView(dialogLayout)
+            builder.setPositiveButton("Oke") { _,_ -> turnOffAlarm(edtPassword.text.toString()) }
+            builder.setNegativeButton("Batal") { _,_ -> }
+            builder.show()
+        }
 
         load()
         loadPemeriksaan()
+        ServiceTracker().actionOnService(this, "start")
     }
 
     @SuppressLint("Range")
@@ -114,32 +147,98 @@ class PemeriksaanActivity : BaseActivity() {
         rcvPemeriksaan.layoutManager = LinearLayoutManager(this)
         var i = 0
         var isSet = false
-        val listPemeriksaan = ArrayList<PemeriksaanModel>()
+        val listPemeriksaan = ArrayList<KunjunganModel>()
         val arrPeriode = arrayOf("29 Hari", "3 Bulan", "6 Bulan", "9 Bulan", "12 Bulan", "18 Bulan", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
         val result = db.getVisits(2, id)
         if (result != null) {
             if (result.moveToFirst()) {
                 do {
-                    val pemeriksaanModel = PemeriksaanModel()
-                    pemeriksaanModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
-                    pemeriksaanModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
-                    pemeriksaanModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_date))
-                    pemeriksaanModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
-                    val dt = DateUtils().dbFormatter.parse(pemeriksaanModel.date.toString())
-                    val tm = DateUtils().tmFormatter.parse(pemeriksaanModel.time)
-                    pemeriksaanModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
-                    pemeriksaanModel.periode = arrPeriode[i]
-                    pemeriksaanModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(dt!!) + " Jam " + DateUtils().tmFormatter.format(tm!!)
-                    listPemeriksaan.add(pemeriksaanModel)
-                    if (!isSet && DateUtils().dbFormatter.format(Date()).toInt() < result.getInt(result.getColumnIndex(DBHelper.visit_date)) && pemeriksaanModel.status != 1) {
-                        listPemeriksaan[if (i == 0) 0 else i-(if (listPemeriksaan[i-1].status == 1) 0 else 1)].status = 2
-                        isSet = true
+                    val kunjunganModel = KunjunganModel()
+                    kunjunganModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
+                    kunjunganModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
+                    kunjunganModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_alarm))
+                    kunjunganModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
+                    val dt = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
+                    val tm = DateUtils().tmFormatter.parse(kunjunganModel.time)
+                    val cl = Calendar.getInstance()
+                    cl.set(DateUtils().getDatePart("yyyy", dt!!), DateUtils().getDatePart("MM", dt)-1, DateUtils().getDatePart("dd", dt),
+                        DateUtils().getDatePart("HH", tm!!), DateUtils().getDatePart("mm", tm))
+                    kunjunganModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
+                    kunjunganModel.info = arrPeriode[i]
+                    kunjunganModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(dt) + " Jam " + DateUtils().tmFormatter.format(tm)
+                    listPemeriksaan.add(kunjunganModel)
+                    if (kunjunganModel.status < 10) {
+                        if (!isSet && Date().time < cl.timeInMillis && kunjunganModel.status != 1) {
+                            listPemeriksaan[i].status = 2
+                            isSet = true
+                        }
+                    } else if (i == 0) {
+                        btn.text ="Nyalakan Alarm"
+                        btn.setOnClickListener {
+                            val dialogLayout = LayoutInflater.from(this).inflate(R.layout.dialog_isi_password, null)
+                            edtPassword = dialogLayout.findViewById(R.id.edtPassword)
+                            imgShow = dialogLayout.findViewById(R.id.imgShow)
+                            imgHide = dialogLayout.findViewById(R.id.imgHide)
+                            edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+
+                            imgShow.setOnClickListener {
+                                edtPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                                imgHide.visibility = View.VISIBLE
+                                imgShow.visibility = View.GONE
+                            }
+                            imgHide.setOnClickListener {
+                                edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                                imgShow.visibility = View.VISIBLE
+                                imgHide.visibility = View.GONE
+                            }
+
+                            val builder = AlertDialog.Builder(this)
+                            builder.setView(dialogLayout)
+                            builder.setPositiveButton("Oke") { _,_ -> turnOnAlarm(edtPassword.text.toString()) }
+                            builder.setNegativeButton("Batal") { _,_ -> }
+                            builder.show()
+                        }
                     }
                     i++
                 } while (result.moveToNext())
             }
         }
         rcvPemeriksaan.adapter = PemeriksaanAdapter(this, listPemeriksaan)
+    }
+
+    private fun turnOffAlarm(text: String) {
+        if (text == "nganjukbangkit") {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Matikan Alarm?")
+            builder.setPositiveButton("Oke") { _,_ -> db.turnOffVisit(id); restartActivity() }
+            builder.setNegativeButton("Batal") { _,_ -> }
+            builder.show()
+        } else {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Password salah!")
+            builder.setPositiveButton("Oke") { _,_ -> }
+            builder.show()
+        }
+    }
+
+    private fun turnOnAlarm(text: String) {
+        if (text == "nganjukbangkit") {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Nyalakan Alarm?")
+            builder.setPositiveButton("Oke") { _,_ -> db.turnOnVisit(id); restartActivity() }
+            builder.setNegativeButton("Batal") { _,_ -> }
+            builder.show()
+        } else {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Password salah!")
+            builder.setPositiveButton("Oke") { _,_ -> }
+            builder.show()
+        }
+    }
+
+    private fun restartActivity() {
+        finish()
+        startActivity(Intent(this, PemeriksaanActivity::class.java).putExtra("id", id))
     }
 
     private fun toggleDetail() {

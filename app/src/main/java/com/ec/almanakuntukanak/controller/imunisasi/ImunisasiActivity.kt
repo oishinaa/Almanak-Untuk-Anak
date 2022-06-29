@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
@@ -19,7 +22,8 @@ import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.DBHelper
 import com.ec.almanakuntukanak.R
 import com.ec.almanakuntukanak.adapter.ImunisasiAdapter
-import com.ec.almanakuntukanak.model.ImunisasiModel
+import com.ec.almanakuntukanak.model.KunjunganModel
+import com.ec.almanakuntukanak.tracker.ServiceTracker
 import com.ec.almanakuntukanak.utils.DateUtils
 import com.google.android.material.imageview.ShapeableImageView
 import java.util.*
@@ -99,6 +103,16 @@ class ImunisasiActivity : BaseActivity() {
         btn = findViewById(R.id.btn)
         lnl = findViewById(R.id.lnl)
 
+        val broadcastReceiver = object: BroadcastReceiver() {
+            override fun onReceive(arg0: Context, intent: Intent) {
+                val action = intent.action
+                if (action == "finish i") {
+                    finish()
+                }
+            }
+        }
+        registerReceiver(broadcastReceiver, IntentFilter("finish i"))
+
         id = intent.getIntExtra("id", 0)
 
         lnlToggleDetail.setOnClickListener{
@@ -169,6 +183,30 @@ class ImunisasiActivity : BaseActivity() {
             builder.setNegativeButton("Batal") { _,_ -> }
             builder.show()
         }
+        btn.setOnClickListener {
+            val dialogLayout = LayoutInflater.from(this).inflate(R.layout.dialog_isi_password, null)
+            edtPassword = dialogLayout.findViewById(R.id.edtPassword)
+            imgShow = dialogLayout.findViewById(R.id.imgShow)
+            imgHide = dialogLayout.findViewById(R.id.imgHide)
+            edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+
+            imgShow.setOnClickListener {
+                edtPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                imgHide.visibility = View.VISIBLE
+                imgShow.visibility = View.GONE
+            }
+            imgHide.setOnClickListener {
+                edtPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                imgShow.visibility = View.VISIBLE
+                imgHide.visibility = View.GONE
+            }
+
+            val builder = AlertDialog.Builder(this)
+            builder.setView(dialogLayout)
+            builder.setPositiveButton("Oke") { _,_ -> deleteAll(edtPassword.text.toString()) }
+            builder.setNegativeButton("Batal") { _,_ -> }
+            builder.show()
+        }
         txtJadwal.setOnClickListener {
             loadImunisasi("jadwal")
         }
@@ -178,6 +216,7 @@ class ImunisasiActivity : BaseActivity() {
 
         load()
         loadImunisasi("jadwal")
+        ServiceTracker().actionOnService(this, "start")
     }
 
     @SuppressLint("Range")
@@ -185,7 +224,7 @@ class ImunisasiActivity : BaseActivity() {
         val result = db.getEntry(id)
         if (result != null) {
             if (result.moveToFirst()) {
-                imgJk.setImageResource(if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) R.drawable.ic_gender_male else R.drawable.ic_gender_female)
+                imgJk.setImageResource(if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) R.drawable.ic_gender_female else R.drawable.ic_gender_male)
                 txtNama.text = result.getString(result.getColumnIndex(DBHelper.entry_name))
                 val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.entry_tgl)).toString())
                 val year = DateUtils().getDatePart("yyyy", Date()) - DateUtils().getDatePart("yyyy", date!!)
@@ -226,32 +265,47 @@ class ImunisasiActivity : BaseActivity() {
         }
         rcvImunisasi.layoutManager = LinearLayoutManager(this)
         var i = 0
-        val listImunisasi = ArrayList<ImunisasiModel>()
+        val listImunisasi = ArrayList<KunjunganModel>()
         val result = db.getVisits(1, id)
         if (result != null) {
             if (result.moveToFirst()) {
                 do {
                     if ((type == "jadwal" && result.getInt(result.getColumnIndex(DBHelper.visit_status)) == 0) ||
                         (type == "sudah" && result.getInt(result.getColumnIndex(DBHelper.visit_status)) == 1)) {
-                        val imunisasiModel = ImunisasiModel()
-                        imunisasiModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
-                        imunisasiModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
-                        imunisasiModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_date))
-                        imunisasiModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
-                        imunisasiModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
-                        imunisasiModel.nama = result.getString(result.getColumnIndex(DBHelper.visit_notes))
+                        val kunjunganModel = KunjunganModel()
+                        kunjunganModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
+                        kunjunganModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
+                        kunjunganModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_alarm))
+                        kunjunganModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
+                        kunjunganModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
+                        kunjunganModel.info = result.getString(result.getColumnIndex(DBHelper.visit_notes))
                         if (type == "jadwal") {
-                            val dt = DateUtils().dbFormatter.parse(imunisasiModel.date.toString())
-                            val tm = DateUtils().tmFormatter.parse(imunisasiModel.time)
-                            imunisasiModel.alarm = DateUtils().dpFormatter(dt!!) + " Jam " + DateUtils().tmFormatter.format(tm!!)
+                            val dt = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
+                            val tm = DateUtils().tmFormatter.parse(kunjunganModel.time)
+                            kunjunganModel.alarm = DateUtils().dpFormatter(dt!!) + " Jam " + DateUtils().tmFormatter.format(tm!!)
                         }
-                        listImunisasi.add(imunisasiModel)
+                        listImunisasi.add(kunjunganModel)
                         i++
                     }
                 } while (result.moveToNext())
             }
         }
         rcvImunisasi.adapter = ImunisasiAdapter(this, listImunisasi)
+    }
+
+    private fun deleteAll(text: String) {
+        if (text == "nganjukbangkit") {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Hapus Semua Jadwal?")
+            builder.setPositiveButton("Oke") { _,_ -> db.delAllVisits(1, id); restartActivity() }
+            builder.setNegativeButton("Batal") { _,_ -> }
+            builder.show()
+        } else {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Password salah!")
+            builder.setPositiveButton("Oke") { _,_ -> }
+            builder.show()
+        }
     }
 
     private fun markAsDone(text: String, visitName: String) {
@@ -262,7 +316,7 @@ class ImunisasiActivity : BaseActivity() {
                 val result = db.getVisitByName(id, name)
                 if (result != null) {
                     if (result.moveToFirst()) {
-                        db.updVisitAsDoneByName(id, visitName);
+                        db.updVisitAsDoneByName(id, visitName)
                     } else {
                         db.addVisit(id, 1, 0, "", name, 1)
                     }
@@ -289,7 +343,7 @@ class ImunisasiActivity : BaseActivity() {
             txtDate.text = DateUtils().dtFormatter(date.time)
 
             val builder = AlertDialog.Builder(this)
-            builder.setTitle("Ubah Pengingat Kunjungan")
+            builder.setTitle("Jadwal Pengingat Kunjungan")
             builder.setView(dialogLayout)
             builder.setPositiveButton("Oke") { _,_ ->
                 val result = db.getVisitByName(id, name)

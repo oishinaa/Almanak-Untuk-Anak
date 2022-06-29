@@ -117,7 +117,6 @@ class PesertaFormActivity : BaseActivity() {
 
         if (id != 0) {
             db.delAllVisits(2, id)
-            Log.v("id", id.toString())
             val dateArr = arrayOf(Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(),
                 Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance())
             for (dt in dateArr) {

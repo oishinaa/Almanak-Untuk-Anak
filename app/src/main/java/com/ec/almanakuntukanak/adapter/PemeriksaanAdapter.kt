@@ -15,13 +15,13 @@ import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.ec.almanakuntukanak.DBHelper
 import com.ec.almanakuntukanak.R
-import com.ec.almanakuntukanak.model.PemeriksaanModel
+import com.ec.almanakuntukanak.model.KunjunganModel
 import com.ec.almanakuntukanak.controller.pemeriksaan.PemeriksaanActivity
 import com.ec.almanakuntukanak.utils.DateUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayList<PemeriksaanModel>) :
+class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayList<KunjunganModel>) :
     RecyclerView.Adapter<PemeriksaanAdapter.ViewHolder>() {
 
     private lateinit var edtPassword: EditText
@@ -58,13 +58,13 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
         holder: ViewHolder,
         position: Int
     ) {
-        val item: PemeriksaanModel = items[position]
+        val item: KunjunganModel = items[position]
         holder.lnlBlankSta.visibility = if (position == 0) View.VISIBLE else View.GONE
-        holder.txtPeriode.text = item.periode
-        holder.btnSudah.visibility = if (item.status < 2) View.INVISIBLE else View.VISIBLE
-        holder.btnTunda.visibility = if (item.status < 2) View.INVISIBLE else View.VISIBLE
+        holder.txtPeriode.text = item.info
         holder.imgCheck.visibility = if (item.status != 1) View.GONE else View.VISIBLE
-        holder.txtAlarm.visibility = if (item.status < 2) View.GONE else View.VISIBLE
+        holder.btnSudah.visibility = if (item.status != 2) View.INVISIBLE else View.VISIBLE
+        holder.btnTunda.visibility = if (item.status != 2) View.INVISIBLE else View.VISIBLE
+        holder.txtAlarm.visibility = if (item.status != 2) View.GONE else View.VISIBLE
         holder.txtAlarm.text = item.alarm
         holder.lnlBlankEnd.visibility = if (position+1 == items.size) View.VISIBLE else View.GONE
         holder.btnSudah.setOnClickListener {
@@ -121,7 +121,6 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
         if (text == "nganjukbangkit") {
             val builder = AlertDialog.Builder(context)
             builder.setTitle("Tandai Sudah Berkunjung?")
-            Log.v("id", "$id")
             builder.setPositiveButton("Oke") { _,_ -> db.updVisitAsDone(id); restartActivity(entry_id) }
             builder.setNegativeButton("Batal") { _,_ -> }
             builder.show()
@@ -133,9 +132,9 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
         }
     }
 
-    private fun submitPassword(text: String, id: Int, entry_id: Int, visit_date: Int, visit_time: String) {
+    private fun submitPassword(text: String, id: Int, entry_id: Int, visit_alarm: Int, visit_time: String) {
         if (text == "nganjukbangkit") {
-            val tempDate = DateUtils().dbFormatter.parse(visit_date.toString())
+            val tempDate = DateUtils().dbFormatter.parse(visit_alarm.toString())
             val tempTime = DateUtils().tmFormatter.parse(visit_time)
             date = Calendar.getInstance()
             date.set(DateUtils().getDatePart("yyyy", tempDate!!), DateUtils().getDatePart("MM", tempDate)-1, DateUtils().getDatePart("dd", tempDate), DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime))

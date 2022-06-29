@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ec.almanakuntukanak.controller.panduan.PanduanActivity
 import com.ec.almanakuntukanak.controller.peserta.PesertaActivity
+import com.ec.almanakuntukanak.tracker.ServiceTracker
 import com.google.android.material.button.MaterialButton
 
 class MainActivity: AppCompatActivity() {
@@ -32,5 +33,7 @@ class MainActivity: AppCompatActivity() {
         btnPanduan.setOnClickListener {
             startActivity(Intent(this, PanduanActivity::class.java))
         }
+
+        ServiceTracker().actionOnService(this, "start")
     }
 }

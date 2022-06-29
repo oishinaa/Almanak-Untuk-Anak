@@ -15,7 +15,8 @@ class AlarmReceiver: BroadcastReceiver() {
 
         val type = intent.getStringExtra("type")
         val text = intent.getStringExtra("text")
-        val notification = NotificationUtils(context).getAlarmNotifBuilder(type!!, text!!).build()
+        val id = intent.getStringExtra("id")
+        val notification = NotificationUtils(context).getAlarmNotifBuilder(type!!, text!!, id!!).build()
         NotificationUtils(context).getManager().notify(2, notification)
         AlarmUtils(context).snoozeAlarm(type, text)
 

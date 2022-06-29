@@ -20,32 +20,11 @@ class AlarmUtils(context: Context): ContextWrapper(context) {
     private val db = DBHelper(this, null)
 
     @SuppressLint("Range")
-    fun setAlarm(date: Calendar, type: String, text: String) {
-        if (DateUtils().dbFormatter.format(date.time) < DateUtils().dbFormatter.format(Date()) || (
-                DateUtils().dbFormatter.format(date.time) == DateUtils().dbFormatter.format(Date()) &&
-                DateUtils().tmFormatter.format(date.time) < DateUtils().dbFormatter.format(Date())
-            )
-        ) date.add(Calendar.DATE, 1)
-
-        /*val result = db.getAlarm()
-        if (result != null) {
-            if (!result.moveToFirst()) {
-                db.addAlarm(DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time))
-                ServiceTracker().actionOnService(this, "start")
-            } else {
-                val currAlarmDate = result.getInt(result.getColumnIndex(DBHelper.alarm_date)).toString()
-                val currAlarmTime = result.getString(result.getColumnIndex(DBHelper.alarm_time))
-
-                if (currAlarmDate != DateUtils().dbFormatter.format(date.time) || currAlarmTime != DateUtils().tmFormatter.format(date.time)) {
-                    db.updAlarm(DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time))
-                    ServiceTracker().actionOnService(this, "start")
-                }
-            }
-        }*/
-
+    fun setAlarm(date: Calendar, type: String, text: String, id: String) {
         val intent = Intent(this, AlarmReceiver::class.java)
         intent.putExtra("type", type)
         intent.putExtra("text", text)
+        intent.putExtra("id", id)
 
         val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, flag)
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager

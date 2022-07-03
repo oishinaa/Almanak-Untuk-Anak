@@ -149,7 +149,7 @@ class PemeriksaanActivity : BaseActivity() {
         var isSet = false
         val clBefore = Calendar.getInstance()
         val listPemeriksaan = ArrayList<KunjunganModel>()
-        val arrPeriode = arrayOf("29 Hari", "3 Bulan", "6 Bulan", "9 Bulan", "12 Bulan", "18 Bulan", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
+        val arrPeriode = arrayOf("29 Hari", "3 Bulan", "6 Bulan", "9 Bulan", "12 Bulan", "18 Bulan", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun", "6 Tahun")
         val result = db.getVisits(2, id)
         if (result != null) {
             if (result.moveToFirst()) {
@@ -169,19 +169,20 @@ class PemeriksaanActivity : BaseActivity() {
                     kunjunganModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(al!!) + " Jam " + DateUtils().tmFormatter.format(tm)
                     listPemeriksaan.add(kunjunganModel)
                     if (kunjunganModel.status < 10) {
-                        if (!isSet && Date().time < cl.timeInMillis && kunjunganModel.status != 1) {
-                            val current = if (i != 0 && listPemeriksaan[i-1].status != 1) i-1 else i
-                            val comparator = if (i != 0 && listPemeriksaan[i-1].status != 1) clBefore else cl
+                        if (!isSet && (Date().time < cl.timeInMillis || i == 9) && kunjunganModel.status != 1) {
+                            val current = if (i != 0 && i != 9 && listPemeriksaan[i-1].status != 1) i-1 else i
+                            cl.set(DateUtils().getDatePart("yyyy", al), DateUtils().getDatePart("MM", al)-1, DateUtils().getDatePart("dd", al), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
+                            val comparator = if (i != 0 && i != 9 && listPemeriksaan[i-1].status != 1) clBefore else cl
                             listPemeriksaan[current].status = 2
-                            if (comparator.timeInMillis < Date().time) {
-                                val pemeriksaan = listPemeriksaan[i-1]
+                            if (i != 0 && comparator.timeInMillis < Date().time) {
+                                val pemeriksaan = listPemeriksaan[current]
                                 val clAfter = Calendar.getInstance()
                                 clAfter.set(Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DATE), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
                                 if (clAfter.timeInMillis < Date().time) {
                                     clAfter.add(Calendar.DATE, 1)
                                 }
                                 val builder = AlertDialog.Builder(this)
-                                builder.setMessage("Apakah anda sudah melakukan pemeriksaan SDI-DTK di umur " + arrPeriode[i-1].lowercase() + " sampai " + arrPeriode[i].lowercase() + "?")
+                                builder.setMessage("Apakah anda sudah melakukan pemeriksaan SDI-DTK di umur " + arrPeriode[current].lowercase() + " sampai " + arrPeriode[current+1].lowercase() + "?")
                                 builder.setPositiveButton("Sudah") { _,_ ->
                                     db.updVisitAsDone(pemeriksaan.id)
                                     restartActivity()

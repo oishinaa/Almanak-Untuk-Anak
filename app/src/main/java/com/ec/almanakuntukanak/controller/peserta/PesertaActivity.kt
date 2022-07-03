@@ -40,12 +40,12 @@ class PesertaActivity : BaseActivity() {
         val broadcastReceiver = object: BroadcastReceiver() {
             override fun onReceive(arg0: Context, intent: Intent) {
                 val action = intent.action
-                if (action == "finish p") {
+                if (action == "finish ps") {
                     finish()
                 }
             }
         }
-        registerReceiver(broadcastReceiver, IntentFilter("finish p"))
+        registerReceiver(broadcastReceiver, IntentFilter("finish ps"))
 
         btn.setOnClickListener {
             startActivity(Intent(this, PesertaFormActivity::class.java).putExtra("id", 0).putExtra("from", from))
@@ -69,7 +69,7 @@ class PesertaActivity : BaseActivity() {
                     item.jk = if (result.getInt(result.getColumnIndex(DBHelper.entry_jk)) == 1) "Perempuan" else "Laki-laki"
                     val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.entry_tgl)).toString())
                     val tgl = Calendar.getInstance()
-                    tgl.set(DateUtils().getDatePart("yyyy", date!!), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
+                    tgl.set(DateUtils().getDatePart("yyyy", date!!), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date), 0, 0, 0)
                     item.ttl = (if (tpl.isNotEmpty()) "$tpl, " else "") + DateUtils().dpFormatter(tgl.time)
                     items.add(item)
                 } while (result.moveToNext())

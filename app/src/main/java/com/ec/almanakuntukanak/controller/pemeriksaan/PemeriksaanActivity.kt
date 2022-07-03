@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
@@ -44,6 +43,7 @@ class PemeriksaanActivity : BaseActivity() {
     private lateinit var edtPassword: EditText
     private lateinit var imgShow: ImageView
     private lateinit var imgHide: ImageView
+    private lateinit var tgl: Calendar
     private var id = 0
 
     private val db = DBHelper(this, null)
@@ -128,8 +128,8 @@ class PemeriksaanActivity : BaseActivity() {
                 val month = if (year < 0) 0 else 12 * year + (DateUtils().getDatePart("MM", Date()) - DateUtils().getDatePart("MM", date)) + if (day < 0) -1 else 0
                 val umur = "" + (if (month < 0) 0 else month/12) + " Tahun " + (if (month < 0) 0 else month%12) + " Bulan"
                 txtUmur.text = umur
-                val tgl = Calendar.getInstance()
-                tgl.set(DateUtils().getDatePart("yyyy", date), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
+                tgl = Calendar.getInstance()
+                tgl.set(DateUtils().getDatePart("yyyy", date), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date), 0, 0, 0)
                 val ttl = "TTL: ${result.getString(result.getColumnIndex(DBHelper.entry_tpl))}, ${DateUtils().dpFormatter(tgl.time)}"
                 txtTtl.text = ttl
                 val nik = "NIK: " + result.getString(result.getColumnIndex(DBHelper.entry_nik))
@@ -147,6 +147,7 @@ class PemeriksaanActivity : BaseActivity() {
         rcvPemeriksaan.layoutManager = LinearLayoutManager(this)
         var i = 0
         var isSet = false
+        val clBefore = Calendar.getInstance()
         val listPemeriksaan = ArrayList<KunjunganModel>()
         val arrPeriode = arrayOf("29 Hari", "3 Bulan", "6 Bulan", "9 Bulan", "12 Bulan", "18 Bulan", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
         val result = db.getVisits(2, id)
@@ -158,18 +159,40 @@ class PemeriksaanActivity : BaseActivity() {
                     kunjunganModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
                     kunjunganModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_alarm))
                     kunjunganModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
-                    val dt = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
+                    val dt = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.visit_date)).toString())
+                    val al = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
                     val tm = DateUtils().tmFormatter.parse(kunjunganModel.time)
                     val cl = Calendar.getInstance()
-                    cl.set(DateUtils().getDatePart("yyyy", dt!!), DateUtils().getDatePart("MM", dt)-1, DateUtils().getDatePart("dd", dt),
-                        DateUtils().getDatePart("HH", tm!!), DateUtils().getDatePart("mm", tm))
+                    cl.set(DateUtils().getDatePart("yyyy", dt!!), DateUtils().getDatePart("MM", dt)-1, DateUtils().getDatePart("dd", dt), DateUtils().getDatePart("HH", tm!!), DateUtils().getDatePart("mm", tm), 0)
                     kunjunganModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
                     kunjunganModel.info = arrPeriode[i]
-                    kunjunganModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(dt) + " Jam " + DateUtils().tmFormatter.format(tm)
+                    kunjunganModel.alarm = "Alarm akan berbunyi pada " + DateUtils().dpFormatter(al!!) + " Jam " + DateUtils().tmFormatter.format(tm)
                     listPemeriksaan.add(kunjunganModel)
                     if (kunjunganModel.status < 10) {
                         if (!isSet && Date().time < cl.timeInMillis && kunjunganModel.status != 1) {
-                            listPemeriksaan[i].status = 2
+                            val current = if (i != 0 && listPemeriksaan[i-1].status != 1) i-1 else i
+                            val comparator = if (i != 0 && listPemeriksaan[i-1].status != 1) clBefore else cl
+                            listPemeriksaan[current].status = 2
+                            if (comparator.timeInMillis < Date().time) {
+                                val pemeriksaan = listPemeriksaan[i-1]
+                                val clAfter = Calendar.getInstance()
+                                clAfter.set(Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DATE), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
+                                if (clAfter.timeInMillis < Date().time) {
+                                    clAfter.add(Calendar.DATE, 1)
+                                }
+                                val builder = AlertDialog.Builder(this)
+                                builder.setMessage("Apakah anda sudah melakukan pemeriksaan SDI-DTK di umur " + arrPeriode[i-1].lowercase() + " sampai " + arrPeriode[i].lowercase() + "?")
+                                builder.setPositiveButton("Sudah") { _,_ ->
+                                    db.updVisitAsDone(pemeriksaan.id)
+                                    restartActivity()
+                                }
+                                builder.setNegativeButton("Belum") { _,_ ->
+                                    db.updVisit(pemeriksaan.id, pemeriksaan.entry_id, 2, DateUtils().dbFormatter.format(clAfter.time).toInt(), DateUtils().tmFormatter.format(clAfter.time), "", 0)
+                                    restartActivity()
+                                }
+                                builder.setCancelable(false)
+                                builder.show()
+                            }
                             isSet = true
                         }
                     } else if (i == 0) {
@@ -199,6 +222,7 @@ class PemeriksaanActivity : BaseActivity() {
                             builder.show()
                         }
                     }
+                    clBefore.set(DateUtils().getDatePart("yyyy", al), DateUtils().getDatePart("MM", al)-1, DateUtils().getDatePart("dd", al), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
                     i++
                 } while (result.moveToNext())
             }

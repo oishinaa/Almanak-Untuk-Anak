@@ -27,6 +27,7 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         const val visit_id = "id"
         const val visit_entry_id = "entry_id"
         const val visit_type = "type"
+        const val visit_alarm = "alarm"
         const val visit_date = "date"
         const val visit_time = "time"
         const val visit_notes = "notes"
@@ -51,6 +52,7 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
             "$visit_id INTEGER PRIMARY KEY, " +
             "$visit_entry_id INTEGER, " +
             "$visit_type INTEGER, " +
+            "$visit_alarm INTEGER, " +
             "$visit_date INTEGER, " +
             "$visit_time TEXT, " +
             "$visit_notes TEXT, " +
@@ -113,19 +115,19 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
-    fun getVisit(id: String): Cursor? {
-        val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $visits WHERE $visit_id = $id", null)
-    }
-
     fun getVisits(): Cursor? {
         val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $visits WHERE $visit_status < 10 ORDER BY $visit_date, $visit_time", null)
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_status < 10 ORDER BY $visit_alarm, $visit_time, $visit_date", null)
     }
 
     fun getVisits(type: Int, entry: Int): Cursor? {
         val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type and $visit_entry_id = $entry ORDER BY $visit_date, $visit_time", null)
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_type = $type and $visit_entry_id = $entry ORDER BY $visit_alarm, $visit_time, $visit_date", null)
+    }
+
+    fun getVisitsByDate(date: String, time: String): Cursor? {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT * FROM $visits WHERE $visit_alarm = $date and $visit_time = '$time'", null)
     }
 
     fun getVisitByName(entry: Int, notes: String): Cursor? {
@@ -133,10 +135,11 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         return db.rawQuery("SELECT * FROM $visits WHERE $visit_notes = '$notes' and $visit_entry_id = $entry", null)
     }
 
-    fun addVisit(entryId: Int, type: Int, date: Int, time: String, notes: String, status: Int) {
+    fun addVisit(entryId: Int, type: Int, alarm: Int, date: Int, time: String, notes: String, status: Int) {
         val values = ContentValues()
         values.put(visit_entry_id, entryId)
         values.put(visit_type, type)
+        values.put(visit_alarm, alarm)
         values.put(visit_date, date)
         values.put(visit_time, time)
         values.put(visit_notes, notes)
@@ -147,11 +150,11 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
-    fun updVisit(id: Int, entryId: Int, type: Int, date: Int, time: String, notes: String, status: Int) {
+    fun updVisit(id: Int, entryId: Int, type: Int, alarm: Int, time: String, notes: String, status: Int) {
         val values = ContentValues()
         values.put(visit_entry_id, entryId)
         values.put(visit_type, type)
-        values.put(visit_date, date)
+        values.put(visit_alarm, alarm)
         values.put(visit_time, time)
         values.put(visit_notes, notes)
         values.put(visit_status, status)
@@ -161,9 +164,10 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
-    fun updVisitByName(entryId: Int, date: Int, time: String, notes: String) {
+    fun updVisitByName(entryId: Int, alarm: Int, date: Int, time: String, notes: String) {
         val values = ContentValues()
         values.put(visit_entry_id, entryId)
+        values.put(visit_alarm, alarm)
         values.put(visit_date, date)
         values.put(visit_time, time)
         values.put(visit_status, 0)
@@ -205,7 +209,7 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
 
     fun snoozeVisit(id: String, date: Int) {
         val values = ContentValues()
-        values.put(visit_date, date)
+        values.put(visit_alarm, date)
 
         val db = this.writableDatabase
         db.update(visits, values, "$visit_id = ?", Array(1) { id })

@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.*
 import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.DBHelper
@@ -31,7 +30,7 @@ class PesertaFormActivity : BaseActivity() {
     private val db = DBHelper(this, null)
 
     private val onDateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
-        tgl.set(year, month, day)
+        tgl.set(year, month, day, 0, 0, 0)
         txtTgl.text = DateUtils().dpFormatter(tgl.time)
     }
 
@@ -82,7 +81,7 @@ class PesertaFormActivity : BaseActivity() {
                 else rdbLakilaki.isChecked = true
                 edtTpl.setText(result.getString(result.getColumnIndex(DBHelper.entry_tpl)))
                 val date = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.entry_tgl)).toString())
-                tgl.set(DateUtils().getDatePart("yyyy", date!!), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
+                tgl.set(DateUtils().getDatePart("yyyy", date!!), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date), 0, 0, 0)
                 txtTgl.text = DateUtils().dpFormatter(tgl.time)
                 edtNIK.setText(result.getString(result.getColumnIndex(DBHelper.entry_nik)))
                 edtKK.setText(result.getString(result.getColumnIndex(DBHelper.entry_kk)))
@@ -91,18 +90,20 @@ class PesertaFormActivity : BaseActivity() {
         }
     }
 
-    fun add() {
+    private fun add() {
         val jk = if (rdbPerempuan.isChecked) 1 else 2
         db.addEntry(edtName.text.toString(), jk, edtTpl.text.toString(), DateUtils().dbFormatter.format(tgl.time).toInt(),
             edtNIK.text.toString(), edtKK.text.toString(), edtJKN.text.toString())
         insertVisit()
+        finish()
         restartActivity()
     }
 
-    fun edit() {
+    private fun edit() {
         val jk = if (rdbPerempuan.isChecked) 1 else 2
         db.updEntry(id, edtName.text.toString(), jk, edtTpl.text.toString(), DateUtils().dbFormatter.format(tgl.time).toInt(),
             edtNIK.text.toString(), edtKK.text.toString(), edtJKN.text.toString())
+        finish()
         restartActivity()
     }
 
@@ -119,27 +120,22 @@ class PesertaFormActivity : BaseActivity() {
             db.delAllVisits(2, id)
             val dateArr = arrayOf(Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(),
                 Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance())
-            for (dt in dateArr) {
-                dt.set(tgl.get(Calendar.YEAR), tgl.get(Calendar.MONTH), tgl.get(Calendar.DATE))
+            val datePartArr = arrayOf(Calendar.DATE, Calendar.MONTH, Calendar.MONTH, Calendar.MONTH, Calendar.MONTH,
+                Calendar.MONTH, Calendar.YEAR, Calendar.YEAR, Calendar.YEAR, Calendar.YEAR)
+            val amountArr = arrayOf(29, 3, 6, 9, 12, 18, 2, 3, 4, 5)
+            for((i, dt) in dateArr.withIndex()) {
+                dt.set(tgl.get(Calendar.YEAR), tgl.get(Calendar.MONTH), tgl.get(Calendar.DATE), 7, 0, 0)
+                dt.add(datePartArr[i], amountArr[i])
             }
-            dateArr[0].add(Calendar.DATE, 29)
-            dateArr[1].add(Calendar.MONTH, 3)
-            dateArr[2].add(Calendar.MONTH, 6)
-            dateArr[3].add(Calendar.MONTH, 9)
-            dateArr[4].add(Calendar.MONTH, 12)
-            dateArr[5].add(Calendar.MONTH, 18)
-            dateArr[6].add(Calendar.YEAR, 2)
-            dateArr[7].add(Calendar.YEAR, 3)
-            dateArr[8].add(Calendar.YEAR, 4)
-            dateArr[9].add(Calendar.YEAR, 5)
+
             for(dt in dateArr) {
-                db.addVisit(id, 2, DateUtils().dbFormatter.format(dt.time).toInt(), "07:00", "", 0)
+                db.addVisit(id, 2, DateUtils().dbFormatter.format(dt.time).toInt(), DateUtils().dbFormatter.format(dt.time).toInt(), "07:00", "", 0)
             }
         }
     }
 
     private fun restartActivity() {
-        sendBroadcast(Intent("finish p"))
+        sendBroadcast(Intent("finish ps"))
         val intent = Intent(this, PesertaActivity::class.java)
         intent.putExtra("from", from)
         startActivity(intent)

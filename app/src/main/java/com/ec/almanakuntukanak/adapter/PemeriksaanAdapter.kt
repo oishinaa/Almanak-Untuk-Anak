@@ -38,7 +38,7 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
     private val db = DBHelper(context, null)
 
     private val onTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
-        date.set(_year, _month, _day, hour, minute)
+        date.set(_year, _month, _day, hour, minute, 0)
         txtDate.text = DateUtils().dtFormatter(date.time)
     }
 
@@ -137,7 +137,7 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
             val tempDate = DateUtils().dbFormatter.parse(visit_alarm.toString())
             val tempTime = DateUtils().tmFormatter.parse(visit_time)
             date = Calendar.getInstance()
-            date.set(DateUtils().getDatePart("yyyy", tempDate!!), DateUtils().getDatePart("MM", tempDate)-1, DateUtils().getDatePart("dd", tempDate), DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime))
+            date.set(DateUtils().getDatePart("yyyy", tempDate!!), DateUtils().getDatePart("MM", tempDate)-1, DateUtils().getDatePart("dd", tempDate), DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime), 0)
 
             val dialogLayout = LayoutInflater.from(context).inflate(R.layout.dialog_buat_alarm, null)
             lnlDate = dialogLayout.findViewById(R.id.lnlDate)

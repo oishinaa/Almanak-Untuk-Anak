@@ -13,12 +13,13 @@ class AlarmReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         AudioTracker.getMediaPlayerInstance().startAudio(context)
 
-        val type = intent.getStringExtra("type")
         val text = intent.getStringExtra("text")
-        val id = intent.getStringExtra("id")
-        val notification = NotificationUtils(context).getAlarmNotifBuilder(type!!, text!!, id!!).build()
+        val fullText = intent.getStringExtra("fullText")
+        val date = intent.getStringExtra("date")
+        val time = intent.getStringExtra("time")
+        val notification = NotificationUtils(context).getAlarmNotifBuilder(text!!, fullText!!).build()
         NotificationUtils(context).getManager().notify(2, notification)
-        AlarmUtils(context).snoozeAlarm(type, text)
+        AlarmUtils(context).snoozeAlarm(date!!, time!!)
 
         Timer().schedule(timerTask { AudioTracker.getMediaPlayerInstance().stopAudio() }, 60 * 1000)
     }

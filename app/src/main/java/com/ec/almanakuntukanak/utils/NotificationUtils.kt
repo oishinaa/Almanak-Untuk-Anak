@@ -13,11 +13,10 @@ import androidx.core.app.NotificationCompat
 import com.ec.almanakuntukanak.DBHelper
 import com.ec.almanakuntukanak.MainActivity
 import com.ec.almanakuntukanak.R
-import com.ec.almanakuntukanak.controller.imunisasi.ImunisasiActivity
-import com.ec.almanakuntukanak.controller.pemeriksaan.PemeriksaanActivity
 import com.ec.almanakuntukanak.model.KunjunganModel
 import com.ec.almanakuntukanak.receiver.SnoozeReceiver
 import java.util.*
+import kotlin.collections.ArrayList
 
 class NotificationUtils(base: Context): ContextWrapper(base) {
     private val channelId = "App Alert Notification ID"
@@ -52,7 +51,14 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
         var alarm = ""
         var i = 0
         var isSet = false
-        var upcoming = -1
+        var message = ""
+        var info = ""
+        var fullInfo = ""
+        val staFrom = Calendar.getInstance()
+        val upUntil = Calendar.getInstance()
+        val arrUpImunisasi = ArrayList<String>()
+        val arrImunisasi = ArrayList<String>()
+        val arrPemeriksaan = ArrayList<String>()
         val listKunjungan = ArrayList<KunjunganModel>()
         val result = db.getVisits()
         if (result != null) {
@@ -63,42 +69,71 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
                     kunjunganModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
                     kunjunganModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
                     kunjunganModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
-                    val notes = result.getString(result.getColumnIndex(DBHelper.visit_notes))
                     val entry = db.getEntry(kunjunganModel.entry_id)
-                    val name = if (entry != null) if (entry.moveToFirst()) entry.getString(entry.getColumnIndex(DBHelper.entry_name)) else "hm" else ""
-                    kunjunganModel.type = result.getInt(result.getColumnIndex(DBHelper.visit_type))
-                    kunjunganModel.info = "Hari ini ada "
-                    kunjunganModel.info += (if (kunjunganModel.type == 1) "imunisasi $notes" else "pemeriksaan SDI-DTK") + " untuk $name!"
+                    kunjunganModel.info = if (entry != null) if (entry.moveToFirst()) entry.getString(entry.getColumnIndex(DBHelper.entry_name)) else "" else ""
+                    kunjunganModel.alarm = result.getString(result.getColumnIndex(DBHelper.visit_notes))
                     kunjunganModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
+                    kunjunganModel.type = result.getInt(result.getColumnIndex(DBHelper.visit_type))
                     if (kunjunganModel.date != 0) {
+                        listKunjungan.add(kunjunganModel)
                         val tempDate = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
                         val tempTime = DateUtils().tmFormatter.parse(kunjunganModel.time)
                         val clnd = Calendar.getInstance()
                         clnd.set(DateUtils().getDatePart("yyyy", tempDate!!), DateUtils().getDatePart("MM", tempDate)-1, DateUtils().getDatePart("dd", tempDate),
-                            DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime))
+                            DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime), 0)
+                        if (Date().time < clnd.timeInMillis && kunjunganModel.status == 0 && (!isSet || clnd.timeInMillis < upUntil.timeInMillis)) {
+                            val tempActDate = DateUtils().dbFormatter.parse(result.getString(result.getColumnIndex(DBHelper.visit_date)))
+                            val actClnd = Calendar.getInstance()
+                            actClnd.set(DateUtils().getDatePart("yyyy", tempActDate!!), DateUtils().getDatePart("MM", tempActDate)-1, DateUtils().getDatePart("dd", tempActDate),
+                                DateUtils().getDatePart("HH", tempTime), DateUtils().getDatePart("mm", tempTime), 0)
+                            Log.v("notif", "${clnd.time} ${actClnd.time} ${kunjunganModel.alarm}")
+                            if (!isSet) {
+                                alarm = "Alarm berikutnya pada ${DateUtils().dtFormatter(clnd.time)}."
+                                message = "Alarm berikutnya pada ${DateUtils().dtFormatter(clnd.time)}."
 
-
-                        listKunjungan.add(kunjunganModel)
-
-                        if (!isSet && Date().time < clnd.timeInMillis && kunjunganModel.status != 1) {
-                            Log.v("notif", "${clnd.time} ${Date()}")
-                            upcoming = i
+                                staFrom.set(clnd.get(Calendar.YEAR), clnd.get(Calendar.MONTH), clnd.get(Calendar.DATE), clnd.get(Calendar.HOUR_OF_DAY), clnd.get(Calendar.MINUTE), 0)
+                                upUntil.set(clnd.get(Calendar.YEAR), clnd.get(Calendar.MONTH), clnd.get(Calendar.DATE), 0, 0, 0)
+                                upUntil.add(Calendar.DATE, 7)
+                            }
+                            if (clnd.timeInMillis/1000 == staFrom.timeInMillis/1000 && kunjunganModel.type == 1) {
+                                if (actClnd.timeInMillis/1000 == clnd.timeInMillis/1000) {
+                                    info += (if (info.isEmpty()) "Hari ini ada " else ", ") + "imunisasi ${kunjunganModel.alarm} untuk ${kunjunganModel.info}"
+                                    fullInfo = info
+                                } else {
+                                    arrUpImunisasi.add("Jadwal imunisasi ${kunjunganModel.alarm} untuk ${kunjunganModel.info} pada ${DateUtils().dtFormatter(actClnd.time)}.")
+                                }
+                            }
+                            // message
+                            if (kunjunganModel.type == 2) {
+                                if (Date().time >= actClnd.timeInMillis) arrPemeriksaan.add(kunjunganModel.info)
+                            } else {
+                                arrImunisasi.add("\nJadwal imunisasi ${kunjunganModel.alarm} untuk ${kunjunganModel.info} pada ${DateUtils().dtFormatter(actClnd.time)}.")
+                            }
                             isSet = true
                         }
+                        i++
                     }
-                    i++
                 } while (result.moveToNext())
-                if (upcoming != -1) {
-                    val tempDate = DateUtils().dbFormatter.parse(listKunjungan[upcoming].date.toString())
-                    val tempTime = DateUtils().tmFormatter.parse(listKunjungan[upcoming].time)
-
-                    val clnd = Calendar.getInstance()
-                    clnd.set(DateUtils().getDatePart("yyyy", tempDate!!), DateUtils().getDatePart("MM", tempDate)-1, DateUtils().getDatePart("dd", tempDate),
-                        DateUtils().getDatePart("HH", tempTime!!), DateUtils().getDatePart("mm", tempTime))
-                    clnd.add(Calendar.DATE, -5)
-                    alarm = DateUtils().dtFormatter(clnd.time)
-                    AlarmUtils(this).setAlarm(clnd, listKunjungan[upcoming].type.toString(), listKunjungan[upcoming].info, listKunjungan[upcoming].id.toString())
+                for(a in arrUpImunisasi) {
+                    if (info.isEmpty()) {
+                        info = a
+                        fullInfo = a
+                    }
+                    else fullInfo += "\n$a"
                 }
+                for(a in arrImunisasi) message += a
+                if (arrPemeriksaan.size > 0) {
+                    var msgPeriksa = "Segera lakukan pemeriksaan stimulasi dini & intervensi deteksi tumbuh kembang untuk "
+                    for ((j, a) in arrPemeriksaan.withIndex()) msgPeriksa += "${if(arrPemeriksaan.size > 1 && j == arrPemeriksaan.size-1) " dan " else if (j != 0) ", " else ""}$a"
+                    msgPeriksa += " di bidan desa atau Kader."
+                    message += "\n$msgPeriksa"
+                    if (info.isEmpty()) {
+                        info = msgPeriksa
+                        fullInfo = msgPeriksa
+                    }
+                    else fullInfo += "\n$msgPeriksa"
+                }
+                AlarmUtils(this).setAlarm(staFrom, "$info!", fullInfo)
             }
         }
 
@@ -106,9 +141,13 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
             PendingIntent.getActivity(this, 0, notificationIntent, if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0)
         }
 
+        val bigText = NotificationCompat.BigTextStyle()
+        bigText.bigText(message)
+
         return NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle("Info")
-            .setContentText(if (alarm == "") "Alarm belum terpasang, silahkan isi data anda." else "Alarm berikutnya pada $alarm.")
+            .setContentText(if (alarm == "") "Alarm belum terpasang, silahkan isi data anda." else alarm)
+            .setStyle(if (message != "") bigText else null)
             .setSmallIcon(R.drawable.logo_tp_grey)
             .setLargeIcon(BitmapFactory.decodeResource(this.resources, R.drawable.logo_bg))
             .setContentIntent(pendingIntent)
@@ -116,29 +155,20 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
             .build()
     }
 
-    fun getAlarmNotifBuilder(type: String, text: String, id: String): NotificationCompat.Builder {
-        val intent: Intent
-        val icon: Int
-        if (type == "1") {
-            intent = Intent(this, ImunisasiActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }
-            icon = R.drawable.ic_syringe
-        } else if (type == "2") {
-            intent = Intent(this, PemeriksaanActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }
-            icon = R.drawable.ic_baby_bed
-        } else {
-            intent = Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }
-            icon = R.drawable.logo_tp_grey
-        }
+    fun getAlarmNotifBuilder(text: String, message: String): NotificationCompat.Builder {
+        val bigText = NotificationCompat.BigTextStyle()
+        bigText.bigText(message)
 
-        val actionIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("id", id).putExtra("act", "open"), flag)
-        val snoozeIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("id", id).putExtra("act", "none"), flag)
+        val pendingIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("open", true), flag)
+        val snoozeIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("open", false), flag)
         return NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle("Alarm")
             .setContentText(text)
+            .setStyle(if (message != "") bigText else null)
             .setSmallIcon(R.drawable.logo_tp_grey)
             .setLargeIcon(BitmapFactory.decodeResource(this.resources, R.drawable.logo_bg))
-            .addAction(icon, "Buka aplikasi", actionIntent)
-            .addAction(icon, "Ingatkan besok", snoozeIntent)
+            .addAction(R.drawable.logo_tp_grey, "Buka aplikasi", pendingIntent)
+            .addAction(R.drawable.logo_tp_grey, "Matikan Alarm", snoozeIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
     }

@@ -45,7 +45,7 @@ class PesertaAdapter(context: PesertaActivity, private var items: ArrayList<Pese
         holder.btnDelete.setOnClickListener {
             val builder = AlertDialog.Builder(context)
             builder.setMessage("Apakah anda yakin untuk menghapus data ini?")
-            builder.setPositiveButton("Oke") { _, _ -> db.delEntry(item.id); restartActivity() }
+            builder.setPositiveButton("Oke") { _, _ -> db.delEntry(item.id); db.delAllVisits(1, item.id); db.delAllVisits(2, item.id); restartActivity() }
             builder.setNegativeButton("Batal") { _, _ -> }
             builder.show()
         }
@@ -53,7 +53,7 @@ class PesertaAdapter(context: PesertaActivity, private var items: ArrayList<Pese
     }
 
     private fun restartActivity() {
-        context.sendBroadcast(Intent("finish p"))
+        context.sendBroadcast(Intent("finish ps"))
         val intent = Intent(context, PesertaActivity::class.java)
         intent.putExtra("from", from)
         context.startActivity(intent)

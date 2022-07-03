@@ -64,7 +64,7 @@ class ImunisasiActivity : BaseActivity() {
     private val db = DBHelper(this, null)
 
     private val onTimeSetListener = TimePickerDialog.OnTimeSetListener { _, hour, minute ->
-        date.set(_year, _month, _day, hour, minute)
+        date.set(_year, _month, _day, hour, minute, 0)
         txtDate.text = DateUtils().dtFormatter(date.time)
     }
 
@@ -233,7 +233,7 @@ class ImunisasiActivity : BaseActivity() {
                 val umur = "" + (if (month < 0) 0 else month/12) + " Tahun " + (if (month < 0) 0 else month%12) + " Bulan"
                 txtUmur.text = umur
                 val tgl = Calendar.getInstance()
-                tgl.set(DateUtils().getDatePart("yyyy", date), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date))
+                tgl.set(DateUtils().getDatePart("yyyy", date), DateUtils().getDatePart("MM", date)-1, DateUtils().getDatePart("dd", date), 0, 0, 0)
                 val ttl = "TTL: ${result.getString(result.getColumnIndex(DBHelper.entry_tpl))}, ${DateUtils().dpFormatter(tgl.time)}"
                 txtTtl.text = ttl
                 val nik = "NIK: " + result.getString(result.getColumnIndex(DBHelper.entry_nik))
@@ -275,14 +275,26 @@ class ImunisasiActivity : BaseActivity() {
                         val kunjunganModel = KunjunganModel()
                         kunjunganModel.id = result.getInt(result.getColumnIndex(DBHelper.visit_id))
                         kunjunganModel.entry_id = result.getInt(result.getColumnIndex(DBHelper.visit_entry_id))
-                        kunjunganModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_alarm))
+                        kunjunganModel.date = result.getInt(result.getColumnIndex(DBHelper.visit_date))
                         kunjunganModel.time = result.getString(result.getColumnIndex(DBHelper.visit_time))
                         kunjunganModel.status = result.getInt(result.getColumnIndex(DBHelper.visit_status))
                         kunjunganModel.info = result.getString(result.getColumnIndex(DBHelper.visit_notes))
                         if (type == "jadwal") {
                             val dt = DateUtils().dbFormatter.parse(kunjunganModel.date.toString())
+                            val al = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.visit_alarm)).toString())
                             val tm = DateUtils().tmFormatter.parse(kunjunganModel.time)
                             kunjunganModel.alarm = DateUtils().dpFormatter(dt!!) + " Jam " + DateUtils().tmFormatter.format(tm!!)
+                            val cl = Calendar.getInstance()
+                            cl.set(DateUtils().getDatePart("yyyy", dt), DateUtils().getDatePart("MM", dt)-1, DateUtils().getDatePart("dd", dt), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
+                            if (cl.timeInMillis > Date().time && dt != al) {
+                                Log.v("perlu update", cl.time.toString() + " " + dt + " $al")
+                                val clAfter = Calendar.getInstance()
+                                clAfter.set(Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DATE), cl.get(Calendar.HOUR_OF_DAY), cl.get(Calendar.MINUTE), 0)
+                                if (clAfter.timeInMillis < Date().time) {
+                                    if (clAfter.timeInMillis < Date().time) clAfter.add(Calendar.DATE, 1)
+                                }
+                                db.updVisit(kunjunganModel.id, kunjunganModel.entry_id, 1, DateUtils().dbFormatter.format(clAfter.time).toInt(), DateUtils().tmFormatter.format(clAfter.time), kunjunganModel.info, 0)
+                            }
                         }
                         listImunisasi.add(kunjunganModel)
                         i++
@@ -318,7 +330,7 @@ class ImunisasiActivity : BaseActivity() {
                     if (result.moveToFirst()) {
                         db.updVisitAsDoneByName(id, visitName)
                     } else {
-                        db.addVisit(id, 1, 0, "", name, 1)
+                        db.addVisit(id, 1, 0, 0, "", name, 1)
                     }
                 }
                 restartActivity()
@@ -348,10 +360,21 @@ class ImunisasiActivity : BaseActivity() {
             builder.setPositiveButton("Oke") { _,_ ->
                 val result = db.getVisitByName(id, name)
                 if (result != null) {
+                    val alarm = Calendar.getInstance()
+                    alarm.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DATE), date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), 0)
+                    if (date.timeInMillis > Date().time) {
+                        alarm.add(Calendar.DATE, -5)
+                        if (DateUtils().dbFormatter.format(alarm.time).toInt() < DateUtils().dbFormatter.format(Date().time).toInt()) {
+                            alarm.set(Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DATE), date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), 0)
+                        }
+                        if (alarm.timeInMillis < Date().time) {
+                            alarm.add(Calendar.DATE, 1)
+                        }
+                    }
                     if (result.moveToFirst()) {
-                        db.updVisitByName(id, DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time), name)
+                        db.updVisitByName(id, DateUtils().dbFormatter.format(alarm.time).toInt(), DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time), name)
                     } else {
-                        db.addVisit(id, 1, DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time), name, 0)
+                        db.addVisit(id, 1, DateUtils().dbFormatter.format(alarm.time).toInt(), DateUtils().dbFormatter.format(date.time).toInt(), DateUtils().tmFormatter.format(date.time), name, 0)
                     }
                 }
                 restartActivity()

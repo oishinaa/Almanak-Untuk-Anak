@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +20,7 @@ import com.ec.almanakuntukanak.utils.DateUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
-class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayList<KunjunganModel>) :
+class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayList<KunjunganModel>, private var tgl: Calendar) :
     RecyclerView.Adapter<PemeriksaanAdapter.ViewHolder>() {
 
     private lateinit var edtPassword: EditText
@@ -30,6 +29,8 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
     private lateinit var lnlDate: LinearLayout
     private lateinit var txtDate: TextView
     private lateinit var date: Calendar
+    private var dateArr = arrayOf(Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(),
+        Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance(), Calendar.getInstance())
     private var _year = 0
     private var _month = 0
     private var _day = 0
@@ -50,6 +51,14 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val datePartArr = arrayOf(Calendar.DATE, Calendar.MONTH, Calendar.MONTH, Calendar.MONTH, Calendar.MONTH,
+            Calendar.MONTH, Calendar.YEAR, Calendar.YEAR, Calendar.YEAR, Calendar.YEAR)
+        val amountArr = arrayOf(29, 3, 6, 9, 12, 18, 2, 3, 4, 5)
+        for((i, dt) in dateArr.withIndex()) {
+            dt.set(tgl.get(Calendar.YEAR), tgl.get(Calendar.MONTH), tgl.get(Calendar.DATE), 0, 0, 0)
+            dt.add(datePartArr[i], amountArr[i])
+        }
+
         val v: View = LayoutInflater.from(context).inflate(R.layout.item_pemeriksaan, parent, false)
         return ViewHolder(v as LinearLayout)
     }
@@ -111,7 +120,7 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
 
             val builder = AlertDialog.Builder(context)
             builder.setView(dialogLayout)
-            builder.setPositiveButton("Oke") { _,_ -> submitPassword(edtPassword.text.toString(), item.id, item.entry_id, item.date, item.time) }
+            builder.setPositiveButton("Oke") { _,_ -> submitPassword(edtPassword.text.toString(), item.id, item.entry_id, item.date, item.time, position) }
             builder.setNegativeButton("Batal") { _,_ -> }
             builder.show()
         }
@@ -132,7 +141,7 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
         }
     }
 
-    private fun submitPassword(text: String, id: Int, entry_id: Int, visit_alarm: Int, visit_time: String) {
+    private fun submitPassword(text: String, id: Int, entry_id: Int, visit_alarm: Int, visit_time: String, position: Int) {
         if (text == "nganjukbangkit") {
             val tempDate = DateUtils().dbFormatter.parse(visit_alarm.toString())
             val tempTime = DateUtils().tmFormatter.parse(visit_time)
@@ -142,8 +151,7 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
             val dialogLayout = LayoutInflater.from(context).inflate(R.layout.dialog_buat_alarm, null)
             lnlDate = dialogLayout.findViewById(R.id.lnlDate)
             txtDate = dialogLayout.findViewById(R.id.txtDate)
-            lnlDate.setOnClickListener { showDatePickerDialog(onDateSetListener) }
-
+            lnlDate.setOnClickListener { showDatePickerDialog(onDateSetListener, dateArr[position].timeInMillis) }
             txtDate.text = DateUtils().dtFormatter(date.time)
 
             val builder = AlertDialog.Builder(context)
@@ -165,8 +173,9 @@ class PemeriksaanAdapter(context: PemeriksaanActivity, private var items: ArrayL
         context.startActivity(Intent(context, PemeriksaanActivity::class.java).putExtra("id", id))
     }
 
-    private fun showDatePickerDialog(onDateSetListener: DatePickerDialog.OnDateSetListener) {
+    private fun showDatePickerDialog(onDateSetListener: DatePickerDialog.OnDateSetListener, min: Long) {
         val datePickerDialog = DatePickerDialog(context, onDateSetListener, date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH))
+        datePickerDialog.datePicker.minDate = min
         datePickerDialog.show()
     }
 

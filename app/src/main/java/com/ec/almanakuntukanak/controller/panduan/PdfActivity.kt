@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
 import com.ec.almanakuntukanak.BaseActivity
 import com.ec.almanakuntukanak.R
 import com.github.chrisbanes.photoview.PhotoView

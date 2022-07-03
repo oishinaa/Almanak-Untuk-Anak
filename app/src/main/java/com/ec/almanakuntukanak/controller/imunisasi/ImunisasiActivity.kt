@@ -11,7 +11,6 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
@@ -287,7 +286,6 @@ class ImunisasiActivity : BaseActivity() {
                             val cl = Calendar.getInstance()
                             cl.set(DateUtils().getDatePart("yyyy", dt), DateUtils().getDatePart("MM", dt)-1, DateUtils().getDatePart("dd", dt), DateUtils().getDatePart("HH", tm), DateUtils().getDatePart("mm", tm), 0)
                             if (cl.timeInMillis > Date().time && dt != al) {
-                                Log.v("perlu update", cl.time.toString() + " " + dt + " $al")
                                 val clAfter = Calendar.getInstance()
                                 clAfter.set(Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DATE), cl.get(Calendar.HOUR_OF_DAY), cl.get(Calendar.MINUTE), 0)
                                 if (clAfter.timeInMillis < Date().time) {

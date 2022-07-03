@@ -8,7 +8,6 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.ec.almanakuntukanak.DBHelper
 import com.ec.almanakuntukanak.MainActivity
@@ -86,7 +85,6 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
                             val actClnd = Calendar.getInstance()
                             actClnd.set(DateUtils().getDatePart("yyyy", tempActDate!!), DateUtils().getDatePart("MM", tempActDate)-1, DateUtils().getDatePart("dd", tempActDate),
                                 DateUtils().getDatePart("HH", tempTime), DateUtils().getDatePart("mm", tempTime), 0)
-                            Log.v("notif", "${clnd.time} ${actClnd.time} ${kunjunganModel.alarm}")
                             if (!isSet) {
                                 alarm = "Alarm berikutnya pada ${DateUtils().dtFormatter(clnd.time)}."
                                 message = "Alarm berikutnya pada ${DateUtils().dtFormatter(clnd.time)}."
@@ -105,7 +103,7 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
                             }
                             // message
                             if (kunjunganModel.type == 2) {
-                                if (Date().time >= actClnd.timeInMillis) arrPemeriksaan.add(kunjunganModel.info)
+                                if (DateUtils().dbFormatter.format(Date()) >= DateUtils().dbFormatter.format(actClnd.time)) arrPemeriksaan.add(kunjunganModel.info)
                             } else {
                                 arrImunisasi.add("\nJadwal imunisasi ${kunjunganModel.alarm} untuk ${kunjunganModel.info} pada ${DateUtils().dtFormatter(actClnd.time)}.")
                             }
@@ -159,15 +157,15 @@ class NotificationUtils(base: Context): ContextWrapper(base) {
         val bigText = NotificationCompat.BigTextStyle()
         bigText.bigText(message)
 
-        val pendingIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("open", true), flag)
-        val snoozeIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("open", false), flag)
+        val actionIntent = PendingIntent.getActivity(this, (1..2147483647).random(), Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }, flag)
+        val snoozeIntent = PendingIntent.getBroadcast(this, (1..2147483647).random(), Intent(this, SnoozeReceiver::class.java).putExtra("act", "none"), flag)
         return NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle("Alarm")
             .setContentText(text)
             .setStyle(if (message != "") bigText else null)
             .setSmallIcon(R.drawable.logo_tp_grey)
             .setLargeIcon(BitmapFactory.decodeResource(this.resources, R.drawable.logo_bg))
-            .addAction(R.drawable.logo_tp_grey, "Buka aplikasi", pendingIntent)
+            .addAction(R.drawable.logo_tp_grey, "Buka aplikasi", actionIntent)
             .addAction(R.drawable.logo_tp_grey, "Matikan Alarm", snoozeIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)

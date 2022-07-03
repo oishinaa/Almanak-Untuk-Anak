@@ -3,11 +3,8 @@ package com.ec.almanakuntukanak.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.os.SystemClock
-import android.util.Log
 import com.ec.almanakuntukanak.enum.State
 import com.ec.almanakuntukanak.tracker.ServiceTracker
 import com.ec.almanakuntukanak.utils.NotificationUtils

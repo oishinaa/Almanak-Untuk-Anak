@@ -5,7 +5,6 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 
-
 class AudioTracker {
     private var mediaPlayer: MediaPlayer? = null
 

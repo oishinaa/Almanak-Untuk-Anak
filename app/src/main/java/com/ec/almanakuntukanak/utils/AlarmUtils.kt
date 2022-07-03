@@ -7,15 +7,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
-import android.util.Log
-import android.widget.Toast
 import com.ec.almanakuntukanak.DBHelper
-import com.ec.almanakuntukanak.MainActivity
-import com.ec.almanakuntukanak.controller.imunisasi.ImunisasiActivity
-import com.ec.almanakuntukanak.controller.pemeriksaan.PemeriksaanActivity
 import com.ec.almanakuntukanak.receiver.AlarmReceiver
-import com.ec.almanakuntukanak.tracker.ServiceTracker
-import java.text.SimpleDateFormat
 import java.util.*
 
 class AlarmUtils(context: Context): ContextWrapper(context) {
@@ -44,9 +37,7 @@ class AlarmUtils(context: Context): ContextWrapper(context) {
                     val id = result.getInt(result.getColumnIndex(DBHelper.visit_id)).toString()
                     val tp = result.getInt(result.getColumnIndex(DBHelper.visit_type))
                     val alrm = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.visit_alarm)).toString())
-                    val schd = DateUtils().dbFormatter.parse(result.getInt(result.getColumnIndex(DBHelper.visit_date)).toString())
                     if (tp == 2 || result.getInt(result.getColumnIndex(DBHelper.visit_alarm)).toString() != result.getInt(result.getColumnIndex(DBHelper.visit_date)).toString()) {
-                        Log.v("kapan", "$alrm $schd ${result.getString(result.getColumnIndex(DBHelper.visit_notes))}")
                         val clnd = Calendar.getInstance()
                         clnd.set(DateUtils().getDatePart("yyyy", alrm!!), DateUtils().getDatePart("MM", alrm)-1, DateUtils().getDatePart("dd", alrm))
                         clnd.add(Calendar.DATE, 1)

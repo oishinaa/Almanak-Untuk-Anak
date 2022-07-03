@@ -227,7 +227,7 @@ class PemeriksaanActivity : BaseActivity() {
                 } while (result.moveToNext())
             }
         }
-        rcvPemeriksaan.adapter = PemeriksaanAdapter(this, listPemeriksaan)
+        rcvPemeriksaan.adapter = PemeriksaanAdapter(this, listPemeriksaan, tgl)
     }
 
     private fun turnOffAlarm(text: String) {

@@ -35,5 +35,9 @@ class MainActivity: AppCompatActivity() {
         btnPanduan.setOnClickListener {
             startActivity(Intent(this, PanduanActivity::class.java))
         }
+
+        AudioTracker.getMediaPlayerInstance().stopAudio()
+        NotificationUtils(this).getManager().cancel(2)
+        ServiceTracker().actionOnService(this, "start")
     }
 }

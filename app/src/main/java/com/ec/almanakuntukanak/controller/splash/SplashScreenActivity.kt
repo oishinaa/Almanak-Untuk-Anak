@@ -22,7 +22,7 @@ class SplashScreenActivity: AppCompatActivity() {
 
         Handler().postDelayed({
             startActivity(Intent(this, GreetingActivity::class.java))
-            overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+            overridePendingTransition(R.anim.fadein, R.anim.fadeout)
             finish()
         }, 2000)
     }

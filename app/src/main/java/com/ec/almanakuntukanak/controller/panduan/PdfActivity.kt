@@ -24,7 +24,7 @@ class PdfActivity : BaseActivity() {
         setContentView(R.layout.activity_pdf)
 
         val actionBar = supportActionBar
-        actionBar!!.title = "Panduan Makan Anak"
+        actionBar!!.title = "Pemberian Makan"
         actionBar.setDisplayHomeAsUpEnabled(true)
 
         img = findViewById(R.id.img)

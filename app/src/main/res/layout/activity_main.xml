@@ -33,7 +33,7 @@
         app:iconPadding="20dp"
         app:iconGravity="textTop"
         app:iconSize="30dp"
-        android:text="Panduan Makan Anak"
+        android:text="Pemberian Makan Bayi dan Anak (PMBA)"
         android:id="@+id/btnPanduan" />
 
     <com.google.android.material.button.MaterialButton

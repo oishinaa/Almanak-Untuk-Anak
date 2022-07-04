@@ -18,7 +18,7 @@ class PanduanActivity : BaseActivity() {
         setContentView(R.layout.activity_panduan)
 
         val actionBar = supportActionBar
-        actionBar!!.title = "Panduan Makan Anak"
+        actionBar!!.title = "Pemberian Makan"
         actionBar.setDisplayHomeAsUpEnabled(true)
 
         btnNolBulan = findViewById(R.id.btnNolBulan)
